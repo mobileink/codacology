@@ -1,0 +1,48 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]
+then
+    echo missing arg: container:tag
+    exit 1
+fi
+
+# USER=`whoami`
+# echo USER=$USER
+
+IMG=$1
+
+# coda version: 9babcbd5da1cdfd2a533c02c686212fc9a1c70a9
+
+
+docker build --build-arg IMG --build-arg USER --force-rm -t $1 -f- . <<EOT
+FROM alpine:3.7
+ARG USER
+ARG IMG
+## install tools
+RUN apk --no-cache --update add dumb-init
+RUN apk add man man-pages mdocml-apropos less-doc
+RUN rm -rf /var/cache/apk/* /tmp
+
+## get coda
+RUN apk add dpkg
+RUN dpkg 
+
+## config filesys and env vars
+RUN mkdir /tmp
+RUN chmod 777 /tmp
+ENV TEMP=/tmp
+
+## set up user
+RUN addgroup -S staff && adduser -D -G staff $USER
+ENV IMG=$IMG
+ENV PS1="$IMG::/\w\ \u\n\$\ "
+COPY --chown=$USER:staff profile /home/$USER/.profile
+RUN chown -R $USER:staff /home/$USER
+
+WORKDIR /home/$USER
+USER $USER
+ENV PS2="$IMG::/\w\ \u\n\$\ "
+
+ENTRYPOINT ["/usr/bin/dumb-init","--"]
+# CMD ["bash" "-c" "tail -F /dev/null"]
+

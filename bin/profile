@@ -1,0 +1,6 @@
+export PS1="$IMG::/\w\ \u\n\$\ "
+
+alias l="ls -pFl"
+alias la="ls -pFla"
+alias lA="ls -pFlA"
+alias lal="ls -pFl"
