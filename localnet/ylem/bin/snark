@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# $1 is a public key
+
+coda client set-snark-worker -address $1

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ -z "$1" ]
+then
+   echo "missing arg: filename of public key without the .pub suffix";
+   exit 1;
+fi
+
+coda accounts unlock -public-key `cat keys/$1.pub`

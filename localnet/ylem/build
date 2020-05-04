@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set +x
+
+ROLE=
+
+if [ -z "$1" ]
+then
+    echo "missing arg NAME";
+    exit 1;
+fi
+
+# config tasks:
+# 1. add user, group to match host accounts
+# 1a. configure user's home dir
+# 2. set up genesis config
+# keys for the "genesis" acct, which we will call "bank".
+# this acct which will be designated as a block producer and a snarker
+# in the daemon start command.
+
+#     && mv /genesis-accounts.json /home/`whoami`/genesis-accounts.json \
+#     && rm /var/lib/coda/coda_genesis_*
+# RUN coda-create-genesis -genesis-dir /var/lib/coda -account-file /home/`whoami`/genesis-accounts.json
+
+USER=`whoami`
+echo USER=$USER
+nl=$'\n'
+
+docker build -t $1:1.0 -f- . <<EOT
+FROM codaprotocol/coda-demo:sandbox-32a.1
+ARG USER=gar
+ENV DEBIAN_FRONTEND noninteractive
+## image metadata
+LABEL description="coda sandbox"
+## install dependencies
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y --no-install-recommends vim-tiny
+RUN apt-get install -y gosu
+## verify gosu install. this will run as root.
+RUN gosu nobody true
+## apt-get cleanup
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+
+## set up user
+RUN groupdel staff && groupadd -r staff && useradd -m -l -r -g staff $USER
+RUN mkdir -p /home/$USER/keys
+COPY --chown=$USER:staff ./bin /home/$USER/bin
+# COPY --chown=$USER:staff ./keys/bank* /home/$USER/keys/
+# COPY --chown=$USER:staff ./keys/*priv /home/$USER/keys/
+COPY --chown=$USER:staff ./keys/*pub /home/$USER/keys/
+RUN chown -R $USER:staff /home/$USER/keys
+RUN chmod go-rwx /home/$USER/keys
+
+## install predefined accounts
+RUN mkdir -p /home/$USER/.coda-config/wallets/store
+COPY --chown=$USER:staff ./keys/* /home/$USER/.coda-config/wallets/store/
+RUN chown -R $USER:staff /home/$USER/.coda-config
+RUN chmod go-rwx /home/$USER/.coda-config/wallets/store
+ENV DEBIAN_FRONTEND teletype
+EOT

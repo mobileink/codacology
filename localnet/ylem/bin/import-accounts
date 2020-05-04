@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -x
+
+for f in keys/*.priv;
+do
+    coda client import -privkey-path $f
+done

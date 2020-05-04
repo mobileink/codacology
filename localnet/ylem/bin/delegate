@@ -1,0 +1,38 @@
+#!/bin/bash
+
+RCVR=
+SNDR=
+FEE=
+MEMO=
+NONCE=
+OPT=
+
+ARGS=
+
+while getopts r:s:f:m:n: OPT
+do
+    case $OPT in
+        r) ARGS="$ARGS -receiver $OPTARG"
+           ;;
+        s) ARGS="$ARGS -sender $OPTARG"
+           ;;
+        f) ARGS="$ARGS -fee=$OPTARG"
+           ;;
+        m) ARGS="$ARGS -memo=\"$OPTARG\""
+           ;;
+        n) ARGS="$ARGS -nonce=$OPTARG"
+           ;;
+        \?) echo "Usage: delegate-stake -r RCVR -s SNDR -f FEE -m MEMO -n NONCE" 1>&2
+            exit 1
+            ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+if [ -z "$ARGS" ]
+then
+    echo "Usage: delegate-stake -r RCVR -s SNDR -f FEE -m MEMO -n NONCE" 1>&2
+    exit 1
+fi
+
+echo coda client delegate-stake $ARGS

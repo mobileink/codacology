@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+export CODA_PRIVKEY_PASS=""
+
+exec coda daemon -background -peer /ip4/172.18.0.3/tcp/8301/ipfs/12D3KooWPzCKhd7s1pb1rrKhNTb754Qj9zK4H1aq55jztr8hmehu -demo-mode -insecure-rest-server $@

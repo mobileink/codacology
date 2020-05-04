@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# view log
+
+set +x
+
+tail -f .coda-config/coda.log | coda-logproc

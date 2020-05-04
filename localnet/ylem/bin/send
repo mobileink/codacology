@@ -1,0 +1,61 @@
+#!/bin/sh
+
+RCVR=
+SNDR=
+AMT=0.5
+FEE=0.1
+MEMO=Test
+NONCE=
+OPT=
+
+ARGS=
+
+while getopts r:s:a:f:m:n: OPT
+do
+    case $OPT in
+        r) RCVR=`cat keys/$OPTARG.pub`
+           ARGS="$ARGS -receiver $RCVR"
+           ;;
+        s) SNDR=`cat keys/$OPTARG.pub`
+           ARGS="$ARGS -sender $SNDR"
+           ;;
+        a) AMT="$OPTARG"
+           ;;
+        f) ARGS="$ARGS -fee $OPTARG"
+           ;;
+        m) ARGS="$ARGS -memo=\"$OPTARG\""
+           ;;
+        n) ARGS="$ARGS -nonce=$OPTARG"
+           ;;
+        \?) echo "Usage: delegate-stake -r RCVR -s SNDR -a AMT -f FEE -m MEMO -n NONCE" 1>&2
+            exit 1
+            ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+ARGS="$ARGS -amount $AMT"
+
+if [ -z $RCVR ]
+then
+    echo Missing required arg -r RCVR
+    exit 1
+fi
+if [ -z $SNDR ]
+then
+    echo Missing required arg -s SNDR
+    exit 1
+fi
+if [ -z $AMT ]
+then
+    echo Missing required arg -a AMT
+    exit 1
+fi
+
+if [ -z "$ARGS" ]
+then
+    echo "Usage: send -r RCVR -s SNDR -a AMT -f FEE -m MEMO -n NONCE" 1>&2
+    exit 1
+fi
+
+coda client send-payment $ARGS

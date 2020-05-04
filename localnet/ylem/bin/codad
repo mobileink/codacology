@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# genesis_constants_file=$(mktemp)
+genesis_constants_file="genesis_constants_file"
+
+echo '{"txpool_max_size":3000,"genesis_state_timestamp":"'$(date '+%Y-%m-%d %H:%M:%S%z')'"}' > "$genesis_constants_file"
+
+echo "genesis_constants_file: $genesis_constants_file"
+
+export CODA_PRIVKEY_PASS=""
+
+SNARKER=`cat keys/bank.pub`
+
+# -background
+
+# NOTE: block producer (staker?) and snark worker are optional; they
+# can be set later, using the coda client command:
+#   coda client set-snark-worker -address PUBKEY
+#   coda client set-staking -public-key
+
+ProgName=$(basename $0)
+
+sub_help(){
+    echo "Usage: $ProgName <subcommand> [options]\n"
+    echo "Subcommands:"
+    echo "    start   start coda daemon"
+    echo "    stop    stop coda daemon"
+    echo ""
+    echo "For help with each subcommand run:"
+    echo "$ProgName <subcommand> -h|--help"
+    echo ""
+}
+
+sub_start(){
+    echo "Running 'start' command."
+    set -x
+    # NB: block-producer-key must use abs path for -background to work
+    exec coda daemon \
+         -seed \
+         -demo-mode \
+         -block-producer-key $HOME/.coda-config/wallets/store/bank \
+         -run-snark-worker $SNARKER \
+         -genesis-constants "$genesis_constants_file" \
+         -insecure-rest-server \
+         $@ \
+         > codad.log 2>&1
+}
+
+sub_stop(){
+    echo "Running 'stop' command."
+    # echo "First arg is '$1'."
+    # echo "Second arg is '$2'."
+    coda client stop-daemon
+}
+
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        sub_help
+        ;;
+    *)
+        shift
+        sub_${subcommand} $@
+        if [ $? = 127 ]; then
+            echo "Error: '$subcommand' is not a known subcommand." >&2
+            echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+            exit 1
+        fi
+        ;;
+esac

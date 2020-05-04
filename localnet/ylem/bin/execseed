@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+
+# genesis_constants_file=$(mktemp)
+genesis_constants_file="genesis_constants_file"
+
+echo '{"txpool_max_size":3000,"genesis_state_timestamp":"'$(date '+%Y-%m-%d %H:%M:%S%z')'"}' > "$genesis_constants_file"
+
+echo "genesis_constants_file: $genesis_constants_file"
+
+export CODA_PRIVKEY_PASS=""
+
+SNARKER=`cat keys/bank.pub`
+
+# -background
+
+# NOTE: block producer (staker?) and snark worker are optional; they
+# can be set later, using the coda client command:
+#   coda client set-snark-worker -address PUBKEY
+#   coda client set-staking -public-key
+
+exec coda daemon \
+     -background \
+     -seed \
+     -demo-mode \
+     -block-producer-key ${HOME}/keys/bank \
+     -run-snark-worker $SNARKER \
+     -genesis-constants "$genesis_constants_file" \
+     -insecure-rest-server \
+     $@ \
+     > codad.log 2>&1
