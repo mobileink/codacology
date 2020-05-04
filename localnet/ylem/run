@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set +x
+
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]
+then
+   echo "missing args: image tag port";
+   exit 1;
+fi
+
+       # --rm \
+
+
+docker run \
+       -d \
+       --network codanet \
+       --publish 127.0.0.1:$3:3085 \
+       --name $1 \
+       --workdir /home/`whoami` \
+       --user `whoami` \
+       --entrypoint "/usr/bin/dumb-init" \
+       $1:$2 \
+       "bash" "-c" "tail -F /dev/null"
